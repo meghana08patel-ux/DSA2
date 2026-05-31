@@ -1,0 +1,76 @@
+import java.util.*;
+
+public class BFSNetwork {
+
+    private Map<String, List<String>> graph = new HashMap<>();
+
+    public void addEdge(String u, String v) {
+        graph.computeIfAbsent(u, k -> new ArrayList<>()).add(v);
+    }
+
+    public void bfs(String start) {
+
+        Queue<String> queue = new LinkedList<>();
+        Set<String> visited = new HashSet<>();
+
+        queue.add(start);
+        visited.add(start);
+
+        System.out.println("===== NETWORK REACHABILITY ANALYSIS =====\n");
+
+        System.out.println("Source Vertex : " + start + "\n");
+
+        System.out.println("BFS Traversal Order:\n");
+
+        while (!queue.isEmpty()) {
+
+            String current = queue.poll();
+
+            System.out.print(current + " ");
+
+            for (String neighbor :
+                    graph.getOrDefault(current,
+                            Collections.emptyList())) {
+
+                if (!visited.contains(neighbor)) {
+
+                    visited.add(neighbor);
+                    queue.add(neighbor);
+                }
+            }
+        }
+
+        System.out.println("\n");
+
+        System.out.println("Reachable Vertices:");
+        System.out.println(visited);
+
+        System.out.println("\nTime Complexity:");
+        System.out.println("BFS Traversal = O(V + E)");
+    }
+
+    public static void main(String[] args) {
+
+        BFSNetwork g = new BFSNetwork();
+
+        g.addEdge("P", "Q");
+        g.addEdge("P", "R");
+
+        g.addEdge("Q", "S");
+        g.addEdge("Q", "T");
+
+        g.addEdge("R", "T");
+        g.addEdge("R", "U");
+
+        g.addEdge("S", "V");
+
+        g.addEdge("T", "V");
+        g.addEdge("T", "W");
+
+        g.addEdge("U", "W");
+
+        g.addEdge("W", "X");
+
+        g.bfs("P");
+    }
+}
