@@ -1,0 +1,58 @@
+class FenwickTree {
+
+    int[] bit;
+    int n;
+
+    FenwickTree(int n) {
+        this.n = n;
+        bit = new int[n + 1];
+    }
+
+    void update(int index, int value) {
+        while (index <= n) {
+            bit[index] += value;
+            index += index & (-index);
+        }
+    }
+
+    void build(int[] arr) {
+        for (int i = 1; i <= n; i++) {
+            update(i, arr[i]);
+        }
+    }
+
+    void printBIT() {
+        System.out.println("Constructed Fenwick Tree:\n");
+
+        System.out.print("Index : ");
+        for (int i = 1; i <= n; i++) {
+            System.out.printf("%4d", i);
+        }
+
+        System.out.println();
+
+        System.out.print("BIT   : ");
+        for (int i = 1; i <= n; i++) {
+            System.out.printf("%4d", bit[i]);
+        }
+
+        System.out.println();
+    }
+
+    public static void main(String[] args) {
+
+        int[] sales = {
+            0,      // dummy index 0
+            500, 1000, 750, 1250,
+            600, 900, 400, 1500,
+            800, 700, 1100, 650,
+            950, 1200, 550
+        };
+
+        FenwickTree ft = new FenwickTree(15);
+
+        ft.build(sales);
+
+        ft.printBIT();
+    }
+}
