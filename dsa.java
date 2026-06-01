@@ -1,160 +1,230 @@
-class AVLNode {
-    int key, height;
-    AVLNode left, right;
+import java.util.*;
 
-    AVLNode(int key) {
-        this.key = key;
+class Node {
+    int score;
+    int height;
+    int size;
+    Node left, right;
+
+    Node(int score) {
+        this.score = score;
         this.height = 1;
+        this.size = 1;
     }
 }
 
-public class PackageAVL {
+public class StreamFlixRankingSystem {
 
-    AVLNode root;
-
-    int height(AVLNode node) {
-        return (node == null) ? 0 : node.height;
+    static int height(Node n) {
+        return (n == null) ? 0 : n.height;
     }
 
-    int getBalance(AVLNode node) {
-        return (node == null) ? 0 :
-                height(node.left) - height(node.right);
+    static int size(Node n) {
+        return (n == null) ? 0 : n.size;
     }
 
-    AVLNode rotateRight(AVLNode y) {
-        AVLNode x = y.left;
-        AVLNode T2 = x.right;
+    static void update(Node n) {
+        if (n != null) {
+            n.height = 1 + Math.max(height(n.left), height(n.right));
+            n.size = 1 + size(n.left) + size(n.right);
+        }
+    }
+
+    static int getBalance(Node n) {
+        return (n == null) ? 0 : height(n.left) - height(n.right);
+    }
+
+    static Node rightRotate(Node y) {
+        Node x = y.left;
+        Node t2 = x.right;
 
         x.right = y;
-        y.left = T2;
+        y.left = t2;
 
-        y.height = Math.max(height(y.left),
-                height(y.right)) + 1;
-        x.height = Math.max(height(x.left),
-                height(x.right)) + 1;
+        update(y);
+        update(x);
 
         return x;
     }
 
-    AVLNode rotateLeft(AVLNode x) {
-        AVLNode y = x.right;
-        AVLNode T2 = y.left;
+    static Node leftRotate(Node x) {
+        Node y = x.right;
+        Node t2 = y.left;
 
         y.left = x;
-        x.right = T2;
+        x.right = t2;
 
-        x.height = Math.max(height(x.left),
-                height(x.right)) + 1;
-        y.height = Math.max(height(y.left),
-                height(y.right)) + 1;
+        update(x);
+        update(y);
 
         return y;
     }
 
-    AVLNode insert(AVLNode node, int key) {
+    static Node insert(Node node, int score) {
 
-        if (node == null)
-            return new AVLNode(key);
+        if (node == null) {
+            System.out.println("Inserted Score: " + score);
+            return new Node(score);
+        }
 
-        if (key < node.key)
-            node.left = insert(node.left, key);
-        else if (key > node.key)
-            node.right = insert(node.right, key);
+        if (score < node.score)
+            node.left = insert(node.left, score);
+        else if (score > node.score)
+            node.right = insert(node.right, score);
         else
             return node;
 
-        node.height = 1 + Math.max(
-                height(node.left),
-                height(node.right));
+        update(node);
 
         int balance = getBalance(node);
 
         // LL
-        if (balance > 1 && key < node.left.key)
-            return rotateRight(node);
+        if (balance > 1 && score < node.left.score)
+            return rightRotate(node);
 
         // RR
-        if (balance < -1 && key > node.right.key)
-            return rotateLeft(node);
+        if (balance < -1 && score > node.right.score)
+            return leftRotate(node);
 
         // LR
-        if (balance > 1 && key > node.left.key) {
-            node.left = rotateLeft(node.left);
-            return rotateRight(node);
+        if (balance > 1 && score > node.left.score) {
+            node.left = leftRotate(node.left);
+            return rightRotate(node);
         }
 
         // RL
-        if (balance < -1 && key < node.right.key) {
-            node.right = rotateRight(node.right);
-            return rotateLeft(node);
+        if (balance < -1 && score < node.right.score) {
+            node.right = rightRotate(node.right);
+            return leftRotate(node);
         }
 
         return node;
     }
 
-    void inorder(AVLNode node) {
-        if (node != null) {
-            inorder(node.left);
-            System.out.println(node.key);
-            inorder(node.right);
-        }
+    static Node minValue(Node node) {
+        while (node.left != null)
+            node = node.left;
+        return node;
     }
 
-    void printTree(AVLNode root, int space) {
+    static Node delete(Node root, int score) {
 
+        if (root == null)
+            return null;
+
+        if (score < root.score)
+            root.left = delete(root.left, score);
+        else if (score > root.score)
+            root.right = delete(root.right, score);
+        else {
+
+            if (root.left == null)
+                return root.right;
+
+            if (root.right == null)
+                return root.left;
+
+            Node temp = minValue(root.right);
+            root.score = temp.score;
+            root.right = delete(root.right, temp.score);
+        }
+
+        update(root);
+
+        int balance = getBalance(root);
+
+        if (balance > 1 && getBalance(root.left) >= 0)
+            return rightRotate(root);
+
+        if (balance > 1 && getBalance(root.left) < 0) {
+            root.left = leftRotate(root.left);
+            return rightRotate(root);
+        }
+
+        if (balance < -1 && getBalance(root.right) <= 0)
+            return leftRotate(root);
+
+        if (balance < -1 && getBalance(root.right) > 0) {
+            root.right = rightRotate(root.right);
+            return leftRotate(root);
+        }
+
+        return root;
+    }
+
+    // Rank in descending order
+    static int rank(Node root, int score) {
+
+        if (root == null)
+            return 0;
+
+        if (score > root.score) {
+            return rank(root.right, score);
+        }
+
+        if (score < root.score) {
+            return size(root.right) + 1 + rank(root.left, score);
+        }
+
+        return size(root.right) + 1;
+    }
+
+    static void reverseInorder(Node root, List<Integer> list) {
         if (root == null)
             return;
 
-        space += 10;
-
-        printTree(root.right, space);
-
-        System.out.println();
-
-        for (int i = 10; i < space; i++)
-            System.out.print(" ");
-
-        System.out.println(root.key);
-
-        printTree(root.left, space);
+        reverseInorder(root.right, list);
+        list.add(root.score);
+        reverseInorder(root.left, list);
     }
 
     public static void main(String[] args) {
 
-        PackageAVL tree = new PackageAVL();
+        Node root = null;
 
-        int[] packageIds = {
-            15, 25, 35, 45, 55, 65,
-            75, 85, 95, 105, 115,
-            125, 135
-        };
+        int[] scores = {
+    101, 205, 150, 320, 180,
+    270, 400, 125, 350, 220
+};
 
-        System.out.println(
-            "AVL INSERTION (Package Indexing System)\n");
+        System.out.println("=========================================");
+        System.out.println(" STREAMFLIX TRENDING CONTENT SYSTEM");
+        System.out.println("=========================================\n");
 
-        System.out.println("Insertion Order:");
+        for (int score : scores)
+            root = insert(root, score);
 
-        for (int id : packageIds) {
-            System.out.print(id + " ");
-            tree.root = tree.insert(tree.root, id);
+        System.out.println("\nAVL Tree constructed successfully.");
+
+        int target = 220;
+
+        System.out.println("\nRank of content with score "
+                + target + " = "
+                + rank(root, target));
+
+        System.out.println("\nUpdating Scores:");
+
+       System.out.println("205 -> 210");
+root = delete(root, 205);
+root = insert(root, 210);
+
+System.out.println("320 -> 325");
+root = delete(root, 320);
+root = insert(root, 325);
+
+        List<Integer> top = new ArrayList<>();
+        reverseInorder(root, top);
+
+        System.out.println("\nTop Trending Content:");
+
+        for (int i = 0; i < Math.min(5, top.size()); i++) {
+            System.out.println(top.get(i));
         }
 
-        System.out.println("\n\nFINAL AVL TREE\n");
+        System.out.println("\nTree Height = " + height(root));
 
-        tree.printTree(tree.root, 0);
+       
 
-        System.out.println(
-            "\n\nSORTED PACKAGE IDS\n");
-
-        tree.inorder(tree.root);
-
-        System.out.println(
-            "\nTime Complexity:");
-
-        System.out.println(
-            "AVL Insert/Search/Delete -> O(log n)");
-
-        System.out.println(
-            "Traversal -> O(n)");
+        System.out.println("\nSystem Status: Operational");
     }
 }
